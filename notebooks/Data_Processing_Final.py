@@ -7,8 +7,8 @@
 
 # COMMAND ----------
 
-import yaml
 from hotel_reservation.data_processor import DataProcessor
+import yaml
 
 # Load configuration
 with open("../project_config.yml", "r") as file:

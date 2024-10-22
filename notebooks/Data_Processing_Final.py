@@ -12,7 +12,7 @@ import yaml
 from hotel_reservation.data_processor import DataProcessor
 
 # Load configuration
-with open('../project_config.yml', 'r') as file:
+with open("../project_config.yml", "r") as file:
     config = yaml.safe_load(file)
 
 print("Configuration loaded:")
@@ -21,7 +21,7 @@ print(yaml.dump(config, default_flow_style=False))
 # COMMAND ----------
 
 # Initialize DataProcessor
-data_processor = DataProcessor('/Volumes/mlops_dev/hotel_reservation/data/Data.csv', config)
+data_processor = DataProcessor("/Volumes/mlops_dev/hotel_reservation/data/Data.csv", config)
 
 # COMMAND ----------
 

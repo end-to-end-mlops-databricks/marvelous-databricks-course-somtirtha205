@@ -22,4 +22,3 @@ logger.info("DataProcessor initialized.")
 # Preprocess the data
 data_processor.preprocess_data()
 logger.info("Data preprocessed.")
-

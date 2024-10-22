@@ -71,7 +71,3 @@ y.info()
 
 print("Features shape:", X.shape)
 print("Target shape:", y.shape)
-
-# COMMAND ----------
-
-

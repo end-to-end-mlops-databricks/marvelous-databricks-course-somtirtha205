@@ -27,7 +27,3 @@ data_processor = DataProcessor('/Volumes/mlops_dev/hotel_reservation/data/Data.c
 
 # Preprocess the data
 data_processor.preprocess_data()
-
-# COMMAND ----------
-
-

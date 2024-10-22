@@ -7,8 +7,9 @@
 
 # COMMAND ----------
 
-from hotel_reservation.data_processor import DataProcessor
 import yaml
+
+from hotel_reservation.data_processor import DataProcessor
 
 # COMMAND ----------
 

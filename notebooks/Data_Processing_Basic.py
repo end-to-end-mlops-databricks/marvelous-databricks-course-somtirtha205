@@ -8,7 +8,7 @@ from sklearn.pipeline import Pipeline
 # COMMAND ----------
 
 data = pd.read_csv("/Volumes/mlops_dev/hotel_reservation/data/Data.csv")
-display(data)
+print(data)
 
 # COMMAND ----------
 
@@ -71,7 +71,3 @@ y.info()
 
 print("Features shape:", X.shape)
 print("Target shape:", y.shape)
-
-# COMMAND ----------
-
-

@@ -72,7 +72,3 @@ def preprocess_data(df, target_column='booking_status', column='Booking_ID'):
     return X, y, preprocessor
 
 X, y, preprocessor = preprocess_data(df)
-
-# COMMAND ----------
-
-

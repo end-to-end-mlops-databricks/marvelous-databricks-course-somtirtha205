@@ -3,12 +3,11 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC %restart_python
 
 # COMMAND ----------
 
 import yaml
-
 from hotel_reservation.data_processor import DataProcessor
 
 # Load configuration

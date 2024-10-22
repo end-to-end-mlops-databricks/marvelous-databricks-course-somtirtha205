@@ -10,6 +10,8 @@
 from hotel_reservation.data_processor import DataProcessor
 import yaml
 
+# COMMAND ----------
+
 # Load configuration
 with open("../project_config.yml", "r") as file:
     config = yaml.safe_load(file)

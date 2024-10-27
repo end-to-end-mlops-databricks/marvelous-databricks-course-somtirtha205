@@ -1,6 +1,11 @@
 catalog_name: mlops_dev
 schema_name: hotel_reservation
 
+parameters:
+  learning_rate: 0.01
+  n_estimators: 1000
+  max_depth: 10
+
 num_features:
   - no_of_adults
   - no_of_children

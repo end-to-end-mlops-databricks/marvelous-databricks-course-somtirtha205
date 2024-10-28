@@ -1,15 +1,15 @@
 # Databricks notebook source
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import seaborn as sns
 from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
+from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import f1_score,confusion_matrix
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
 
 # COMMAND ----------
 
@@ -85,12 +85,15 @@ X, y, preprocessor = preprocess_data(df)
 
 # COMMAND ----------
 
+
 def train_and_evaluate_model(X, y, preprocessor, test_size=0.2, random_state=42, n_estimators=1000):
-    # Create a pipeline with a preprocessor and a regressor
-    model = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        ('classifier', RandomForestClassifier(n_estimators=n_estimators, random_state=random_state))
-    ])
+    # Create a pipeline with a preprocessor and a classifier
+    model = Pipeline(
+        steps=[
+            ("preprocessor", preprocessor),
+            ("classifier", RandomForestClassifier(n_estimators=n_estimators, random_state=random_state)),
+        ]
+    )
 
     # Split the data into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
@@ -102,45 +105,52 @@ def train_and_evaluate_model(X, y, preprocessor, test_size=0.2, random_state=42,
     y_pred = model.predict(X_test)
 
     # Calculate metrics
-    f1 = f1_score(y_test, y_pred, average='weighted')
+    f1 = f1_score(y_test, y_pred, average="weighted")
     cm = confusion_matrix(y_test, y_pred)
 
     # Print the metrics
     print(f"F1 Score: {f1}")
     print(f"Confusion Matrix: {cm}")
-    
+
     return model, f1, cm, X_train, X_test, y_train, y_test, y_pred
+
 
 model, f1, cm, X_train, X_test, y_train, y_test, y_pred = train_and_evaluate_model(X, y, preprocessor)
 
 # COMMAND ----------
 
-def plot_actual_vs_predicted(y_test, y_pred, xlabel="Predicted Reservation", ylabel="Actual Reservation", title="Confusion Matrix"):
+
+def plot_actual_vs_predicted(
+    y_test, y_pred, xlabel="Predicted Reservation", ylabel="Actual Reservation", title="Confusion Matrix"
+):
     plt.figure(figsize=(10, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
     plt.tight_layout()
     plt.show()
-    
+
+
 plot_actual_vs_predicted(y_test, y_pred)
 
 # COMMAND ----------
 
+
 def plot_feature_importance(model, top_n=10, title="Top Feature Importance", figsize=(10, 6)):
     # Extract feature importance and feature names
-    feature_importance = model.named_steps['classifier'].feature_importances_
-    feature_names = model.named_steps['preprocessor'].get_feature_names_out()
+    feature_importance = model.named_steps["classifier"].feature_importances_
+    feature_names = model.named_steps["preprocessor"].get_feature_names_out()
 
     # Plot feature importance
     plt.figure(figsize=figsize)
     sorted_idx = np.argsort(feature_importance)
-    pos = np.arange(top_n) + .5
+    pos = np.arange(top_n) + 0.5
     plt.barh(pos, feature_importance[sorted_idx[-top_n:]])
     plt.yticks(pos, feature_names[sorted_idx[-top_n:]])
     plt.title(title)
     plt.tight_layout()
     plt.show()
+
 
 plot_feature_importance(model)

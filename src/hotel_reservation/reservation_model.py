@@ -15,7 +15,7 @@ class ReservationModel:
                         n_estimators=config["parameters"]["n_estimators"],
                         max_depth=config["parameters"]["max_depth"],
                         learning_rate=config["parameters"]["learning_rate"],
-                        random_state=42,
+                        random_state=config["parameters"]["random_state"],
                     ),
                 ),
             ]

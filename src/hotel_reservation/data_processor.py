@@ -57,9 +57,9 @@ class DataProcessor:
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
 
-        train_set_with_timestamp.write.mode("append").saveAsTable(f"{catalog_name}.{schema_name}.train_set")
+        train_set_with_timestamp.write.mode("overwrite").saveAsTable(f"{catalog_name}.{schema_name}.train_set")
 
-        test_set_with_timestamp.write.mode("append").saveAsTable(f"{catalog_name}.{schema_name}.test_set")
+        test_set_with_timestamp.write.mode("overwrite").saveAsTable(f"{catalog_name}.{schema_name}.test_set")
 
         spark.sql(
             f"ALTER TABLE {catalog_name}.{schema_name}.train_set "

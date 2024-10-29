@@ -46,6 +46,9 @@ class DataProcessor:
     def save_to_catalog(self, train_set: pd.DataFrame, test_set: pd.DataFrame, spark: SparkSession):
         """Save the train and test sets into Databricks tables."""
 
+        catalog_name = self.config["catalog_name"]
+        schema_name = self.config["schema_name"]
+
         train_set_with_timestamp = spark.createDataFrame(train_set).withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
@@ -54,20 +57,16 @@ class DataProcessor:
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
         )
 
-        train_set_with_timestamp.write.mode("append").saveAsTable(
-            f"{self.config.catalog_name}.{self.config.schema_name}.train_set"
-        )
+        train_set_with_timestamp.write.mode("append").saveAsTable(f"{catalog_name}.{schema_name}.train_set")
 
-        test_set_with_timestamp.write.mode("append").saveAsTable(
-            f"{self.config.catalog_name}.{self.config.schema_name}.test_set"
-        )
+        test_set_with_timestamp.write.mode("append").saveAsTable(f"{catalog_name}.{schema_name}.test_set")
 
         spark.sql(
-            f"ALTER TABLE {self.config.catalog_name}.{self.config.schema_name}.train_set "
+            f"ALTER TABLE {catalog_name}.{schema_name}.train_set "
             "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )
 
         spark.sql(
-            f"ALTER TABLE {self.config.catalog_name}.{self.config.schema_name}.test_set "
+            f"ALTER TABLE {catalog_name}.{schema_name}.test_set "
             "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
         )

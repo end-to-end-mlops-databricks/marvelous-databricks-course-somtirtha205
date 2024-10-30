@@ -1,0 +1,18 @@
+{
+    "_name": "mlops_dev.hotel_reservation.hotel-reservation-model_pyfunc",
+    "_version": "2",
+    "_creation_time": 1730295181541,
+    "_last_updated_timestamp": 1730295217419,
+    "_description": "",
+    "_user_id": "somtirthab@gmail.com",
+    "_current_stage": null,
+    "_source": "dbfs:/databricks/mlflow-tracking/943861233790022/f4cc5f642c2b431286055dc57afcaa1f/artifacts/pyfunc-hotel-reservation-model",
+    "_run_id": "f4cc5f642c2b431286055dc57afcaa1f",
+    "_run_link": null,
+    "_status": "READY",
+    "_status_message": "",
+    "_tags": {
+        "git_sha": "3055af355f360ba5784ae7037f3260a70331f702"
+    },
+    "_aliases": []
+}

@@ -1,0 +1,40 @@
+{
+    "info": {
+        "artifact_uri": "dbfs:/databricks/mlflow-tracking/1332858957528473/0bb2b794630143cba023481a71ed9437/artifacts",
+        "end_time": 1730294548757,
+        "experiment_id": "1332858957528473",
+        "lifecycle_stage": "active",
+        "run_id": "0bb2b794630143cba023481a71ed9437",
+        "run_name": "demo-run",
+        "run_uuid": "0bb2b794630143cba023481a71ed9437",
+        "start_time": 1730294546687,
+        "status": "FINISHED",
+        "user_id": ""
+    },
+    "data": {
+        "metrics": {
+            "metric1": 1.0,
+            "metric2": 2.0
+        },
+        "params": {
+            "type": "demo"
+        },
+        "tags": {
+            "branch": "week2",
+            "git_sha": "ffa63b430205ff7",
+            "mlflow.databricks.cluster.id": "1030-130805-zdiamqr4",
+            "mlflow.databricks.cluster.info": "{\"cluster_name\":\"Som's Cluster\",\"spark_version\":\"15.4.x-scala2.12\",\"node_type_id\":\"Standard_D3_v2\",\"driver_node_type_id\":\"Standard_D3_v2\",\"autotermination_minutes\":120,\"disk_spec\":{},\"num_workers\":0}",
+            "mlflow.databricks.cluster.libraries": "{\"installable\":[],\"redacted\":[]}",
+            "mlflow.databricks.notebook.commandID": "1730293910371_6342041692232744173_78d9cd00b6254728b62d6722e675d512",
+            "mlflow.note.content": "demo run",
+            "mlflow.runColor": "#da4c4c",
+            "mlflow.runName": "demo-run",
+            "mlflow.source.name": "c:\\Users\\somti\\venv\\Lib\\site-packages\\ipykernel_launcher.py",
+            "mlflow.source.type": "LOCAL",
+            "mlflow.user": "somtirthab@gmail.com"
+        }
+    },
+    "inputs": {
+        "dataset_inputs": []
+    }
+}

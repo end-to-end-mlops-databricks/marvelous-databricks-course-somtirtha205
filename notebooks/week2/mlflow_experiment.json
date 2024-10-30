@@ -1,0 +1,15 @@
+{
+    "_experiment_id": "1332858957528473",
+    "_name": "/Shared/hotel-reservation-basic",
+    "_artifact_location": "dbfs:/databricks/mlflow-tracking/1332858957528473",
+    "_lifecycle_stage": "active",
+    "_tags": {
+        "mlflow.experiment.sourceName": "/Shared/hotel-reservation-basic",
+        "mlflow.ownerId": "7265035574447010",
+        "mlflow.ownerEmail": "somtirthab@gmail.com",
+        "mlflow.experimentType": "MLFLOW_EXPERIMENT",
+        "repository_name": "hotel-reservation"
+    },
+    "_creation_time": 1730144973009,
+    "_last_update_time": 1730144975507
+}

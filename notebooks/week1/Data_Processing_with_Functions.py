@@ -91,7 +91,10 @@ def train_and_evaluate_model(X, y, preprocessor, test_size=0.2, random_state=42,
     model = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("classifier", RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, random_state=random_state)),
+            (
+                "classifier",
+                RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, random_state=random_state),
+            ),
         ]
     )
 

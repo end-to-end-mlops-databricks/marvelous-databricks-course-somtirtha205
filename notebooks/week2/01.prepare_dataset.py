@@ -7,11 +7,11 @@
 
 # COMMAND ----------
 
+
 import yaml
-from hotel_reservation.data_processor import DataProcessor
-from datetime import datetime
-import pandas as pd
 from pyspark.sql import SparkSession
+
+from hotel_reservation.data_processor import DataProcessor
 
 # COMMAND ----------
 
@@ -50,5 +50,5 @@ train_set, test_set = data_processor.split_data()
 
 # COMMAND ----------
 
-#Save to Catalog
+# Save to Catalog
 data_processor.save_to_catalog(train_set=train_set, test_set=test_set, spark=spark)

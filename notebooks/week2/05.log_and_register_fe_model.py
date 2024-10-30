@@ -7,21 +7,20 @@
 
 # COMMAND ----------
 
+
+import matplotlib.pyplot as plt
+import mlflow
 import yaml
 from databricks import feature_engineering
-from pyspark.sql import SparkSession
-import mlflow
-from pyspark.sql import functions as F
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import f1_score, confusion_matrix, ConfusionMatrixDisplay 
+from databricks.feature_engineering import FeatureLookup
 from mlflow.models import infer_signature
-from datetime import datetime
-from databricks.feature_engineering import FeatureFunction, FeatureLookup
-import matplotlib.pyplot as plt
+from pyspark.sql import SparkSession
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix, f1_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 # COMMAND ----------
 
@@ -87,24 +86,33 @@ CREATE OR REPLACE TABLE {catalog_name}.{schema_name}.hotel_features
  no_of_special_requests INT);
 """)
 
-spark.sql(f"ALTER TABLE {catalog_name}.{schema_name}.hotel_features "
-          "ADD CONSTRAINT hotel_booking_pk PRIMARY KEY(Booking_ID);")
+spark.sql(
+    f"ALTER TABLE {catalog_name}.{schema_name}.hotel_features "
+    "ADD CONSTRAINT hotel_booking_pk PRIMARY KEY(Booking_ID);"
+)
 
-spark.sql(f"ALTER TABLE {catalog_name}.{schema_name}.hotel_features "
-          "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);")
+spark.sql(
+    f"ALTER TABLE {catalog_name}.{schema_name}.hotel_features " "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
+)
 
 # Insert data into the feature table from both train and test sets
-spark.sql(f"INSERT INTO {catalog_name}.{schema_name}.hotel_features "
-          f"SELECT Booking_ID, no_of_adults, no_of_children, no_of_weekend_nights, no_of_week_nights, type_of_meal_plan, required_car_parking_space, room_type_reserved, lead_time, arrival_year, arrival_month, arrival_date, market_segment_type, repeated_guest, no_of_previous_cancellations, no_of_previous_bookings_not_canceled, avg_price_per_room, no_of_special_requests FROM {catalog_name}.{schema_name}.train_set")
+spark.sql(
+    f"INSERT INTO {catalog_name}.{schema_name}.hotel_features "
+    f"SELECT Booking_ID, no_of_adults, no_of_children, no_of_weekend_nights, no_of_week_nights, type_of_meal_plan, required_car_parking_space, room_type_reserved, lead_time, arrival_year, arrival_month, arrival_date, market_segment_type, repeated_guest, no_of_previous_cancellations, no_of_previous_bookings_not_canceled, avg_price_per_room, no_of_special_requests FROM {catalog_name}.{schema_name}.train_set"
+)
 
-spark.sql(f"INSERT INTO {catalog_name}.{schema_name}.hotel_features "
-          f"SELECT Booking_ID, no_of_adults, no_of_children, no_of_weekend_nights, no_of_week_nights, type_of_meal_plan, required_car_parking_space, room_type_reserved, lead_time, arrival_year, arrival_month, arrival_date, market_segment_type, repeated_guest, no_of_previous_cancellations, no_of_previous_bookings_not_canceled, avg_price_per_room, no_of_special_requests FROM {catalog_name}.{schema_name}.test_set")
+spark.sql(
+    f"INSERT INTO {catalog_name}.{schema_name}.hotel_features "
+    f"SELECT Booking_ID, no_of_adults, no_of_children, no_of_weekend_nights, no_of_week_nights, type_of_meal_plan, required_car_parking_space, room_type_reserved, lead_time, arrival_year, arrival_month, arrival_date, market_segment_type, repeated_guest, no_of_previous_cancellations, no_of_previous_bookings_not_canceled, avg_price_per_room, no_of_special_requests FROM {catalog_name}.{schema_name}.test_set"
+)
 
 # COMMAND ----------
 
 # Load feature-engineered DataFrame
 model_feature_lookups = [FeatureLookup(table_name=feature_table_name, lookup_key=id)]
-training_set = fe.create_training_set(df=train_set[[id, target]], feature_lookups=model_feature_lookups, label=target, exclude_columns=[id]) 
+training_set = fe.create_training_set(
+    df=train_set[[id, target]], feature_lookups=model_feature_lookups, label=target, exclude_columns=[id]
+)
 
 training_df = training_set.load_df().toPandas()
 training_df.info()
@@ -131,7 +139,7 @@ categorical_transformer = Pipeline(
 
 # Combine preprocessing steps
 preprocessor = ColumnTransformer(
-transformers=[
+    transformers=[
         ("num", numeric_transformer, num_features),
         ("cat", categorical_transformer, cat_features),
     ]
@@ -139,10 +147,7 @@ transformers=[
 
 # COMMAND ----------
 
-model = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        ('classifier', RandomForestClassifier(**parameters))
-    ])
+model = Pipeline(steps=[("preprocessor", preprocessor), ("classifier", RandomForestClassifier(**parameters))])
 
 # COMMAND ----------
 
@@ -150,8 +155,7 @@ model = Pipeline(steps=[
 mlflow.set_experiment(experiment_name="/Shared/hotel-reservation-fe")
 git_sha = "3055af355f360ba5784ae7037f3260a70331f702"
 
-with mlflow.start_run(tags={"branch": "week2",
-                            "git_sha": f"{git_sha}"}) as run:
+with mlflow.start_run(tags={"branch": "week2", "git_sha": f"{git_sha}"}) as run:
     run_id = run.info.run_id
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
@@ -184,5 +188,6 @@ with mlflow.start_run(tags={"branch": "week2",
     )
 
 mlflow.register_model(
-    model_uri=f'runs:/{run_id}/RandomForestClassifier-fe',
-    name=f"{catalog_name}.{schema_name}.hotel_reservation_model_fe")
+    model_uri=f"runs:/{run_id}/RandomForestClassifier-fe",
+    name=f"{catalog_name}.{schema_name}.hotel_reservation_model_fe",
+)

@@ -1,20 +1,20 @@
 # Databricks notebook source
-from pyspark.sql import SparkSession
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import f1_score, confusion_matrix, ConfusionMatrixDisplay 
-import mlflow
-from mlflow.models import infer_signature
-import yaml
 import matplotlib.pyplot as plt
+import mlflow
+import yaml
+from mlflow.models import infer_signature
+from pyspark.sql import SparkSession
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix, f1_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 # COMMAND ----------
 
 mlflow.set_tracking_uri("databricks")
-mlflow.set_registry_uri('databricks-uc')
+mlflow.set_registry_uri("databricks-uc")
 
 # COMMAND ----------
 
@@ -65,7 +65,7 @@ categorical_transformer = Pipeline(
     ]
 )
 
-    # Combine preprocessing steps
+# Combine preprocessing steps
 preprocessor = ColumnTransformer(
     transformers=[
         ("num", numeric_transformer, num_features),
@@ -75,22 +75,18 @@ preprocessor = ColumnTransformer(
 
 # COMMAND ----------
 
-model = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        ('classifier', RandomForestClassifier(**parameters))
-    ])
+model = Pipeline(steps=[("preprocessor", preprocessor), ("classifier", RandomForestClassifier(**parameters))])
 
 # COMMAND ----------
 
-mlflow.set_experiment(experiment_name='/Shared/hotel-reservation')
+mlflow.set_experiment(experiment_name="/Shared/hotel-reservation")
 git_sha = "3055af355f360ba5784ae7037f3260a70331f702"
 
 # COMMAND ----------
 
 # Start an MLflow run to track the training process
 with mlflow.start_run(
-    tags={"git_sha": f"{git_sha}",
-          "branch": "week2"},
+    tags={"git_sha": f"{git_sha}", "branch": "week2"},
 ) as run:
     run_id = run.info.run_id
 
@@ -115,14 +111,7 @@ with mlflow.start_run(
     mlflow.log_artifact("confusion-matrix.png")
     signature = infer_signature(model_input=X_train, model_output=y_pred)
 
-    dataset = mlflow.data.from_spark(
-    train_set_spark, table_name=f"{catalog_name}.{schema_name}.train_set",
-    version="0")
+    dataset = mlflow.data.from_spark(train_set_spark, table_name=f"{catalog_name}.{schema_name}.train_set", version="0")
     mlflow.log_input(dataset, context="training")
-    
-    mlflow.sklearn.log_model(
-        sk_model=model,
-        artifact_path="RandomForest",
-        signature=signature
-    )
 
+    mlflow.sklearn.log_model(sk_model=model, artifact_path="RandomForest", signature=signature)

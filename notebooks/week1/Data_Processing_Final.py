@@ -8,10 +8,14 @@
 # COMMAND ----------
 
 import yaml
-
+from pyspark.sql import SparkSession
 from hotel_reservation.data_processor import DataProcessor
 from hotel_reservation.reservation_model import ReservationModel
 from hotel_reservation.utils import plot_feature_importance, visualize_results
+
+# COMMAND ----------
+
+spark = SparkSession.builder.getOrCreate()
 
 # COMMAND ----------
 

@@ -86,12 +86,12 @@ X, y, preprocessor = preprocess_data(df)
 # COMMAND ----------
 
 
-def train_and_evaluate_model(X, y, preprocessor, test_size=0.2, random_state=42, n_estimators=1000):
+def train_and_evaluate_model(X, y, preprocessor, test_size=0.2, random_state=42, n_estimators=1000, max_depth=25):
     # Create a pipeline with a preprocessor and a classifier
     model = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("classifier", RandomForestClassifier(n_estimators=n_estimators, random_state=random_state)),
+            ("classifier", RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, random_state=random_state)),
         ]
     )
 

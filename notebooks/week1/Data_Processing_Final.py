@@ -29,13 +29,35 @@ data_processor = DataProcessor("/Volumes/mlops_dev/hotel_reservation/data/Data.c
 
 # COMMAND ----------
 
+# Extract configuration details
+num_features = config["num_features"]
+cat_features = config["cat_features"]
+target = config["target"]
+parameters = config["parameters"]
+catalog_name = config["catalog_name"]
+schema_name = config["schema_name"]
+
+# COMMAND ----------
+
 # Preprocess the data
 data_processor.preprocess_data()
 
 # COMMAND ----------
 
 # Split the data
-X_train, X_test, y_train, y_test = data_processor.split_data()
+train_set, test_set = data_processor.split_data()
+
+# COMMAND ----------
+
+# Load training and testing sets from Databricks tables
+train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").toPandas()
+test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
+
+X_train = train_set[num_features + cat_features]
+y_train = train_set[target]
+
+X_test = test_set[num_features + cat_features]
+y_test = test_set[target]
 
 # COMMAND ----------
 

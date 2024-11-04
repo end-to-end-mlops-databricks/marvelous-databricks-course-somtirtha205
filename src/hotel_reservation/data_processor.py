@@ -7,7 +7,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-
 class DataProcessor:
     def __init__(self, filepath, config):
         self.df = self.load_data(filepath)
@@ -33,8 +32,8 @@ class DataProcessor:
         # Combine preprocessing steps
         self.preprocessor = ColumnTransformer(
             transformers=[
-                ("num", numeric_transformer, self.config["num_features"]),
-                ("cat", categorical_transformer, self.config["cat_features"]),
+                ("num", numeric_transformer, self.config.num_features),
+                ("cat", categorical_transformer, self.config.cat_features),
             ]
         )
 
@@ -46,8 +45,8 @@ class DataProcessor:
     def save_to_catalog(self, train_set: pd.DataFrame, test_set: pd.DataFrame, spark: SparkSession):
         """Save the train and test sets into Databricks tables."""
 
-        catalog_name = self.config["catalog_name"]
-        schema_name = self.config["schema_name"]
+        catalog_name = self.config.catalog_name
+        schema_name = self.config.schema_name
 
         train_set_with_timestamp = spark.createDataFrame(train_set).withColumn(
             "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")

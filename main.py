@@ -1,14 +1,13 @@
 import logging
-
 import yaml
-
-# DBConnect Session
 from databricks.connect import DatabricksSession
 
+from src.hotel_reservation.config import ProjectConfig
 from src.hotel_reservation.data_processor import DataProcessor
 from src.hotel_reservation.reservation_model import ReservationModel
 from src.hotel_reservation.utils import plot_feature_importance, visualize_results
 
+#Spark Session
 spark = DatabricksSession.builder.profile("adb-1846957892648178").getOrCreate()
 
 # Logging
@@ -16,19 +15,18 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Load configuration
-with open("project_config.yml", "r") as file:
-    config = yaml.safe_load(file)
+config = ProjectConfig.from_yaml(config_path="project_config.yml")
 
 print("Configuration loaded:")
 print(yaml.dump(config, default_flow_style=False))
 
 # Extract configuration details
-num_features = config["num_features"]
-cat_features = config["cat_features"]
-target = config["target"]
-parameters = config["parameters"]
-catalog_name = config["catalog_name"]
-schema_name = config["schema_name"]
+num_features = config.num_features
+cat_features = config.cat_features
+target = config.target
+parameters = config.parameters
+catalog_name = config.catalog_name
+schema_name = config.schema_name
 
 # Initialize DataProcessor
 data_processor = DataProcessor(r"data\Data.csv", config)

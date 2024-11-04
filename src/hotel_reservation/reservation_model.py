@@ -2,7 +2,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 
-
 class ReservationModel:
     def __init__(self, preprocessor, config):
         self.config = config
@@ -12,9 +11,9 @@ class ReservationModel:
                 (
                     "classifier",
                     RandomForestClassifier(
-                        n_estimators=config["parameters"]["n_estimators"],
-                        max_depth=config["parameters"]["max_depth"],
-                        random_state=config["parameters"]["random_state"],
+                        n_estimators=config.parameters['n_estimators'],
+                        max_depth=config.parameters['max_depth'],
+                        random_state=config.parameters['random_state']
                     ),
                 ),
             ]

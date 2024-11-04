@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+
 class DataProcessor:
     def __init__(self, filepath, config):
         self.df = self.load_data(filepath)

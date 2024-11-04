@@ -1,4 +1,5 @@
 import logging
+
 import yaml
 from databricks.connect import DatabricksSession
 
@@ -7,7 +8,7 @@ from src.hotel_reservation.data_processor import DataProcessor
 from src.hotel_reservation.reservation_model import ReservationModel
 from src.hotel_reservation.utils import plot_feature_importance, visualize_results
 
-#Spark Session
+# Spark Session
 spark = DatabricksSession.builder.profile("adb-1846957892648178").getOrCreate()
 
 # Logging

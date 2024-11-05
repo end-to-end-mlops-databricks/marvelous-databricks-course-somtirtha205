@@ -9,15 +9,15 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 class DataProcessor:
-    def __init__(self, filepath, config):
-        self.df = self.load_data(filepath)
+    def __init__(self, config):
+        self.df = None
         self.config = config
         self.preprocessor = None
 
-    def load_data(self, filepath):
-        return pd.read_csv(filepath)
+    def preprocess_data(self, filepath, spark):
+        # Load Data
+        self.df = spark.read.csv(filepath, header=True, inferSchema=True).toPandas()
 
-    def preprocess_data(self):
         # Create preprocessing steps for numeric and categorical data
         numeric_transformer = Pipeline(
             steps=[("imputer", SimpleImputer(strategy="median")), ("scaler", StandardScaler())]

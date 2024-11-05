@@ -1,7 +1,6 @@
 # Databricks notebook source
 import matplotlib.pyplot as plt
 import mlflow
-import yaml
 from mlflow.models import infer_signature
 from pyspark.sql import SparkSession
 from sklearn.compose import ColumnTransformer
@@ -11,6 +10,8 @@ from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+from hotel_reservation.config import ProjectConfig
+
 # COMMAND ----------
 
 mlflow.set_tracking_uri("databricks")
@@ -19,18 +20,17 @@ mlflow.set_registry_uri("databricks-uc")
 # COMMAND ----------
 
 # Load configuration
-with open("../../project_config.yml", "r") as file:
-    config = yaml.safe_load(file)
+config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
 
 # COMMAND ----------
 
 # Extract configuration details
-num_features = config["num_features"]
-cat_features = config["cat_features"]
-target = config["target"]
-parameters = config["parameters"]
-catalog_name = config["catalog_name"]
-schema_name = config["schema_name"]
+num_features = config.num_features
+cat_features = config.cat_features
+target = config.target
+parameters = config.parameters
+catalog_name = config.catalog_name
+schema_name = config.schema_name
 
 
 # COMMAND ----------

@@ -4,11 +4,12 @@ import json
 
 import mlflow
 import pandas as pd
-import yaml
 from mlflow import MlflowClient
 from mlflow.models import infer_signature
 from mlflow.utils.environment import _mlflow_conda_env
 from pyspark.sql import SparkSession
+
+from hotel_reservation.config import ProjectConfig
 
 # COMMAND ----------
 
@@ -19,18 +20,17 @@ client = MlflowClient()
 # COMMAND ----------
 
 # Load configuration
-with open("../../project_config.yml", "r") as file:
-    config = yaml.safe_load(file)
+config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
 
 # COMMAND ----------
 
 # Extract configuration details
-num_features = config["num_features"]
-cat_features = config["cat_features"]
-target = config["target"]
-parameters = config["parameters"]
-catalog_name = config["catalog_name"]
-schema_name = config["schema_name"]
+num_features = config.num_features
+cat_features = config.cat_features
+target = config.target
+parameters = config.parameters
+catalog_name = config.catalog_name
+schema_name = config.schema_name
 
 # COMMAND ----------
 

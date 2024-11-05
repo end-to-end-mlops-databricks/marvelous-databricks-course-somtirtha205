@@ -1,9 +1,9 @@
 [project]
 name = "hotel-reservation"
 version = "0.0.1"
-description = "Hotel Revervation Project"
+description = "Hotel Reservation Project"
 readme = "README.md"
-requires-python = "==3.11"
+requires-python = "==3.11.10"
 dependencies = ["lightgbm==4.5.0",
                 "scikit-learn==1.5.2",
                 "cloudpickle==3.1.0",

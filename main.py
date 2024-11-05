@@ -30,7 +30,7 @@ catalog_name = config.catalog_name
 schema_name = config.schema_name
 
 # Initialize DataProcessor
-data_processor = DataProcessor(r"data\Data.csv", config)
+data_processor = DataProcessor("/Volumes/mlops_dev/hotel_reservation/data/Data.csv", config, spark)
 logger.info("DataProcessor initialized.")
 
 # Preprocess the data
@@ -64,6 +64,8 @@ logger.info("Model training completed.")
 
 # Evaluate the model
 f1, cm = model.evaluate(X_test, y_test)
+print(f"F1 Score: {f1}")
+print(f"Confusion Matrix: {cm}")
 logger.info(f"Model evaluation completed: f1={f1}, cm={cm}")
 
 ## Visualizing Results

@@ -1,8 +1,8 @@
 # Databricks notebook source
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import seaborn as sns
+from pyspark.sql import SparkSession
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
@@ -12,8 +12,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 # COMMAND ----------
-
-data = pd.read_csv("/Volumes/mlops_dev/hotel_reservation/data/Data.csv")
+spark = SparkSession.builder.getOrCreate()
+data = spark.read.csv("/Volumes/mlops_dev/hotel_reservation/data/Data.csv", header=True, inferSchema=True).toPandas()
 print(data)
 
 # COMMAND ----------
@@ -34,11 +34,8 @@ print(data.isna().sum().sum())
 
 # COMMAND ----------
 
-df = data.drop("Booking_ID", axis=1)
-X = df.drop("booking_status", axis=1)
-y = df["booking_status"]
-y = pd.get_dummies(y, columns="booking_status", drop_first=True)
-y.set_axis(["booking_status"], axis="columns", inplace=True)
+y = data["booking_status"]
+X = data.drop(["Booking_ID", "booking_status"], axis=1)
 
 # COMMAND ----------
 
@@ -81,7 +78,10 @@ print("Target shape:", y.shape)
 # COMMAND ----------
 
 model = Pipeline(
-    steps=[("preprocessor", preprocessor), ("classifier", RandomForestClassifier(n_estimators=1000, random_state=42))]
+    steps=[
+        ("preprocessor", preprocessor),
+        ("classifier", RandomForestClassifier(n_estimators=1000, max_depth=25, random_state=42)),
+    ]
 )
 
 # COMMAND ----------

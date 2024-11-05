@@ -1,8 +1,8 @@
 # Databricks notebook source
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import seaborn as sns
+from pyspark.sql import SparkSession
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
@@ -13,12 +13,15 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 # COMMAND ----------
 
+spark = SparkSession.builder.getOrCreate()
+
 
 def load_data(filepath):
     """
     Load the data from the given filepath.
     """
-    df = pd.read_csv(filepath)
+    df = spark.read.csv(filepath, header=True, inferSchema=True).toPandas()
+
     return df
 
 
@@ -42,16 +45,9 @@ def preprocess_data(df, target_column="booking_status", column="Booking_ID"):
     preprocessor (ColumnTransformer): The preprocessing pipeline
     """
 
-    # Remove Booking_ID from features
-    df1 = df.drop(column, axis=1)
-
     # Separate features and target
-    X = df1.drop(target_column, axis=1)
-    y = df1[target_column]
-
-    # Convert target to Numeric and change the column name back to booking_status
-    y = pd.get_dummies(y, columns=target_column, drop_first=True)
-    y.set_axis(["booking_status"], axis="columns", inplace=True)
+    y = df[target_column]
+    X = df.drop([column, target_column], axis=1)
 
     # Identify numeric and categorical columns
     numeric_features = X.select_dtypes(include=["int64", "float64"]).columns

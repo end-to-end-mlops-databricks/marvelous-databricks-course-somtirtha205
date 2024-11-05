@@ -1,18 +1,16 @@
 # Databricks notebook source
-# MAGIC %pip install /Volumes/mlops_dev/hotel_reservation/data/hotel_reservation-0.0.1-py3-none-any.whl
+# MAGIC %pip install ../hotel_reservation-0.0.1-py3-none-any.whl --force-reinstall
 
 # COMMAND ----------
 
-# MAGIC %restart_python
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
-
 
 import matplotlib.pyplot as plt
 import mlflow
-import yaml
 from databricks import feature_engineering
-from databricks.feature_engineering import FeatureLookup
+from databricks.feature_engineering import FeatureFunction, FeatureLookup
 from mlflow.models import infer_signature
 from pyspark.sql import SparkSession
 from sklearn.compose import ColumnTransformer
@@ -21,6 +19,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+from hotel_reservation.config import ProjectConfig
 
 # COMMAND ----------
 
@@ -36,30 +36,30 @@ mlflow.set_tracking_uri("databricks")
 # COMMAND ----------
 
 # Load configuration
-with open("../../project_config.yml", "r") as file:
-    config = yaml.safe_load(file)
+config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
 
 # COMMAND ----------
 
 # Extract configuration details
-num_features = config["num_features"]
-cat_features = config["cat_features"]
-target = config["target"]
-parameters = config["parameters"]
-catalog_name = config["catalog_name"]
-schema_name = config["schema_name"]
-id = config["id"]
+num_features = config.num_features
+cat_features = config.cat_features
+target = config.target
+parameters = config.parameters
+catalog_name = config.catalog_name
+schema_name = config.schema_name
+id = config.id
 
 # COMMAND ----------
 
 # Define table names and function name
 feature_table_name = f"{catalog_name}.{schema_name}.hotel_features"
+function_name = f"{catalog_name}.{schema_name}.booking_cancelled_percentage"
 
 # COMMAND ----------
 
 # Load training and test sets
 train_set = spark.table(f"{catalog_name}.{schema_name}.train_set")
-test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
+test_set = spark.table(f"{catalog_name}.{schema_name}.test_set")
 
 # COMMAND ----------
 
@@ -67,21 +67,7 @@ test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
 spark.sql(f"""
 CREATE OR REPLACE TABLE {catalog_name}.{schema_name}.hotel_features
 (Booking_ID STRING NOT NULL,
- no_of_adults INT,
- no_of_children INT,
- no_of_weekend_nights INT,
- no_of_week_nights INT,
- type_of_meal_plan STRING,
- required_car_parking_space INT,
- room_type_reserved STRING,
  lead_time INT,
- arrival_year INT,
- arrival_month INT,
- arrival_date INT,
- market_segment_type STRING,
- repeated_guest INT,
- no_of_previous_cancellations INT,
- no_of_previous_bookings_not_canceled INT,
  avg_price_per_room DOUBLE,
  no_of_special_requests INT);
 """)
@@ -98,20 +84,59 @@ spark.sql(
 # Insert data into the feature table from both train and test sets
 spark.sql(
     f"INSERT INTO {catalog_name}.{schema_name}.hotel_features "
-    f"SELECT Booking_ID, no_of_adults, no_of_children, no_of_weekend_nights, no_of_week_nights, type_of_meal_plan, required_car_parking_space, room_type_reserved, lead_time, arrival_year, arrival_month, arrival_date, market_segment_type, repeated_guest, no_of_previous_cancellations, no_of_previous_bookings_not_canceled, avg_price_per_room, no_of_special_requests FROM {catalog_name}.{schema_name}.train_set"
+    f"SELECT Booking_ID, lead_time, avg_price_per_room, no_of_special_requests FROM {catalog_name}.{schema_name}.train_set"
 )
 
 spark.sql(
     f"INSERT INTO {catalog_name}.{schema_name}.hotel_features "
-    f"SELECT Booking_ID, no_of_adults, no_of_children, no_of_weekend_nights, no_of_week_nights, type_of_meal_plan, required_car_parking_space, room_type_reserved, lead_time, arrival_year, arrival_month, arrival_date, market_segment_type, repeated_guest, no_of_previous_cancellations, no_of_previous_bookings_not_canceled, avg_price_per_room, no_of_special_requests FROM {catalog_name}.{schema_name}.test_set"
+    f"SELECT Booking_ID, lead_time, avg_price_per_room, no_of_special_requests FROM {catalog_name}.{schema_name}.test_set"
 )
 
 # COMMAND ----------
 
+# Define a function to calculate the no of visits per month
+spark.sql(f"""
+CREATE OR REPLACE FUNCTION {function_name}(previous_cancel INT, previous_booking INT)
+RETURNS DOUBLE
+LANGUAGE PYTHON AS
+$$
+try:
+    return (previous_cancel/(previous_cancel + previous_booking)) * 100
+except ZeroDivisionException:
+    # in case of 0, we can return 0.
+    return 0
+$$
+""")
+
+# COMMAND ----------
+
+# Load training and test sets
+train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").drop(
+    "lead_time", "avg_price_per_room", "no_of_special_requests"
+)
+test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
+
+# COMMAND ----------
+
 # Load feature-engineered DataFrame
-model_feature_lookups = [FeatureLookup(table_name=feature_table_name, lookup_key=id)]
+model_feature_lookups = [
+    FeatureLookup(
+        table_name=feature_table_name,
+        feature_names=["lead_time", "avg_price_per_room", "no_of_special_requests"],
+        lookup_key=id,
+    ),
+    FeatureFunction(
+        udf_name=function_name,
+        output_name="cancel_percentage",
+        input_bindings={
+            "previous_cancel": "no_of_previous_cancellations",
+            "previous_booking": "no_of_previous_bookings_not_canceled",
+        },
+    ),
+]
+
 training_set = fe.create_training_set(
-    df=train_set[[id, target]], feature_lookups=model_feature_lookups, label=target, exclude_columns=[id]
+    df=train_set, feature_lookups=model_feature_lookups, label=target, exclude_columns=["update_timestamp_utc"]
 )
 
 training_df = training_set.load_df().toPandas()
@@ -120,9 +145,9 @@ training_df.info()
 # COMMAND ----------
 
 # Split features and target
-X_train = training_df[num_features + cat_features]
+X_train = training_df[num_features + cat_features + ["cancel_percentage"]]
 y_train = training_df[target]
-X_test = test_set[num_features + cat_features]
+X_test = test_set[num_features + cat_features + ["cancel_percentage"]]
 y_test = test_set[target]
 
 # COMMAND ----------
@@ -188,6 +213,8 @@ with mlflow.start_run(tags={"branch": "week2", "git_sha": f"{git_sha}"}) as run:
     )
 
 mlflow.register_model(
-    model_uri=f"runs:/{run_id}/RandomForestClassifier-fe",
+    model_uri=f"runs:/{run_id}/RandomForest",
     name=f"{catalog_name}.{schema_name}.hotel_reservation_model_fe",
 )
+
+# COMMAND ----------

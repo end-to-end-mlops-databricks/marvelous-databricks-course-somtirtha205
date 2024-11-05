@@ -3,7 +3,6 @@
 
 # COMMAND ----------
 
-# MAGIC %restart_python
 
 # COMMAND ----------
 

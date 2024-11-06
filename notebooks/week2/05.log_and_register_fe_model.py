@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -146,11 +146,13 @@ training_df.info()
 
 # Cancel Percentage in Test set
 try:
-    test_set["cancel_percentage"] = (test_set["no_of_previous_cancellations"]/
-                                     (test_set["no_of_previous_cancellations"] + test_set["no_of_previous_bookings_not_canceled"])) * 100
+    test_set["cancel_percentage"] = (
+        test_set["no_of_previous_cancellations"]
+        / (test_set["no_of_previous_cancellations"] + test_set["no_of_previous_bookings_not_canceled"])
+    ) * 100
 except ZeroDivisionError:
     test_set["cancel_percentage"] = 0
-    
+
 
 # COMMAND ----------
 

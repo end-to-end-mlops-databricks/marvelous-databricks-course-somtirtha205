@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-# MAGIC dbutils.library.restartPython()
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -94,7 +94,7 @@ spark.sql(
 
 # COMMAND ----------
 
-# Define a function to calculate the no of visits per month
+# Define a function to calculate the Booking Cancel Percentage
 spark.sql(f"""
 CREATE OR REPLACE FUNCTION {function_name}(previous_cancel INT, previous_booking INT)
 RETURNS DOUBLE
@@ -102,7 +102,7 @@ LANGUAGE PYTHON AS
 $$
 try:
     return (previous_cancel/(previous_cancel + previous_booking)) * 100
-except ZeroDivisionException:
+except ZeroDivisionError:
     # in case of 0, we can return 0.
     return 0
 $$
@@ -141,6 +141,16 @@ training_set = fe.create_training_set(
 
 training_df = training_set.load_df().toPandas()
 training_df.info()
+
+# COMMAND ----------
+
+# Cancel Percentage in Test set
+try:
+    test_set["cancel_percentage"] = (test_set["no_of_previous_cancellations"]/
+                                     (test_set["no_of_previous_cancellations"] + test_set["no_of_previous_bookings_not_canceled"])) * 100
+except ZeroDivisionError:
+    test_set["cancel_percentage"] = 0
+    
 
 # COMMAND ----------
 
@@ -216,5 +226,3 @@ mlflow.register_model(
     model_uri=f"runs:/{run_id}/RandomForest",
     name=f"{catalog_name}.{schema_name}.hotel_reservation_model_fe",
 )
-
-# COMMAND ----------

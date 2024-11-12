@@ -21,6 +21,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+import matplotlib.pyplot as plt
 import hashlib
 import requests
 from hotel_reservation.config import ProjectConfig
@@ -46,6 +47,7 @@ target = config.target
 catalog_name = config.catalog_name
 schema_name = config.schema_name
 ab_test_params = config.ab_test
+parameters = config.parameters
 
 # COMMAND ----------
 
@@ -148,7 +150,7 @@ with mlflow.start_run(tags={"model_class": "A", "git_sha": git_sha}) as run:
     mlflow.log_input(dataset, context="training")
 
     # Log the pipeline model in MLflow with a unique artifact path
-    mlflow.sklearn.log_model(sk_model=pipeline, artifact_path="RandomForest", signature=signature)
+    mlflow.sklearn.log_model(sk_model=model, artifact_path="RandomForest", signature=signature)
 
 model_version = mlflow.register_model(
     model_uri=f"runs:/{run_id}/RandomForest", name=model_name, tags={"git_sha": f"{git_sha}"}
@@ -197,7 +199,7 @@ class HousePriceModelWrapper(mlflow.pyfunc.PythonModel):
     def predict(self, context, model_input):
         if isinstance(model_input, pd.DataFrame):
             booking_id = str(model_input["Booking_ID"].values[0])
-            hashed_id = hashlib.md5(house_id.encode(encoding="UTF-8")).hexdigest()
+            hashed_id = hashlib.md5(booking_id.encode(encoding="UTF-8")).hexdigest()
             # convert a hexadecimal (base-16) string into an integer
             if int(hashed_id, 16) % 2:
                 predictions = self.model_a.predict(model_input.drop(["Booking_ID"], axis=1))
@@ -275,7 +277,7 @@ workspace.serving_endpoints.create(
                 entity_name=f"{catalog_name}.{schema_name}.hotel-reservation_model_pyfunc_ab_test",
                 scale_to_zero_enabled=True,
                 workload_size="Small",
-                entity_version=model_version,
+                entity_version=1,
             )
         ]
     ),

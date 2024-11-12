@@ -56,14 +56,14 @@ online_table_pipeline = workspace.online_tables.create(name=online_table_name, s
 # COMMAND ----------
 
 workspace.serving_endpoints.create(
-    name="hotel_reservation-model-serving-fe",
+    name="hotel-reservation-model-serving-fe",
     config=EndpointCoreConfigInput(
         served_entities=[
             ServedEntityInput(
                 entity_name=f"{catalog_name}.{schema_name}.hotel_reservation_model_fe",
                 scale_to_zero_enabled=True,
                 workload_size="Small",
-                entity_version=1,
+                entity_version=2,
             )
         ]
     ),

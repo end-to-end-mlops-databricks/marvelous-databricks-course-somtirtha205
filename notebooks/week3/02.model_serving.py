@@ -3,18 +3,20 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-import time
-import requests
 import random
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import requests
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput, TrafficConfig, Route
-from hotel_reservation.config import ProjectConfig
+from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
 from pyspark.sql import SparkSession
+
+from hotel_reservation.config import ProjectConfig
 
 # COMMAND ----------
 
@@ -41,13 +43,13 @@ workspace.serving_endpoints.create(
                 entity_version=2,
             )
         ],
-    # Optional if only 1 entity is served
-    #traffic_config=TrafficConfig(
-    #    routes=[
-    #        Route(served_model_name="hotel_reservation_model-basic",
-    #              traffic_percentage=100)
-    #    ]
-    #    ),
+        # Optional if only 1 entity is served
+        # traffic_config=TrafficConfig(
+        #    routes=[
+        #        Route(served_model_name="hotel_reservation_model-basic",
+        #              traffic_percentage=100)
+        #    ]
+        #    ),
     ),
 )
 
@@ -85,7 +87,7 @@ required_columns = [
     "no_of_special_requests",
     "type_of_meal_plan",
     "room_type_reserved",
-    "market_segment_type"
+    "market_segment_type",
 ]
 
 sampled_records = train_set[required_columns].sample(n=1000, replace=True).to_dict(orient="records")
@@ -107,16 +109,14 @@ Each body should be list of json with columns
   'type_of_meal_plan': 'Meal Plan 1',
   'room_type_reserved': 'Room Type 1',
   'market_segment_type': 'Offline'}]
-  
+
 """
 
 # COMMAND ----------
 
 start_time = time.time()
 
-model_serving_endpoint = (
-    f"https://{host}/serving-endpoints/hotel-reservation-model-serving/invocations"
-)
+model_serving_endpoint = f"https://{host}/serving-endpoints/hotel-reservation-model-serving/invocations"
 response = requests.post(
     f"{model_serving_endpoint}",
     headers={"Authorization": f"Bearer {token}"},
@@ -138,9 +138,7 @@ print("Execution time:", execution_time, "seconds")
 # COMMAND ----------
 
 # Initialize variables
-model_serving_endpoint = (
-    f"https://{host}/serving-endpoints/hotel-reservation-model-serving/invocations"
-)
+model_serving_endpoint = f"https://{host}/serving-endpoints/hotel-reservation-model-serving/invocations"
 
 headers = {"Authorization": f"Bearer {token}"}
 num_requests = 1000

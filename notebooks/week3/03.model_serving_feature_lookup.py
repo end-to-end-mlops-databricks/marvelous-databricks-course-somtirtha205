@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -20,6 +20,7 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
 from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
 from pyspark.sql import SparkSession
+
 from hotel_reservation.config import ProjectConfig
 
 # COMMAND ----------
@@ -100,7 +101,7 @@ required_columns = [
     "type_of_meal_plan",
     "room_type_reserved",
     "market_segment_type",
-    "Booking_ID"
+    "Booking_ID",
 ]
 
 train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").toPandas()
@@ -110,7 +111,7 @@ dataframe_records = [[record] for record in sampled_records]
 
 # COMMAND ----------
 
-train_set.dtypes
+# MAGIC train_set.dtypes
 
 # COMMAND ----------
 
@@ -141,4 +142,4 @@ house_features = spark.table(f"{catalog_name}.{schema_name}.hotel_features").toP
 
 # COMMAND ----------
 
-house_features.dtypes
+# MAGIC house_features.dtypes

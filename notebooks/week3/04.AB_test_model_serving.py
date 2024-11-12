@@ -3,27 +3,29 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
+import hashlib
 import time
+
+import matplotlib.pyplot as plt
 import mlflow
 import pandas as pd
+import requests
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
-from sklearn.ensemble import RandomForestClassifier
 from mlflow import MlflowClient
 from mlflow.models import infer_signature
 from pyspark.sql import SparkSession
 from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-import matplotlib.pyplot as plt
-import hashlib
-import requests
+
 from hotel_reservation.config import ProjectConfig
 
 # COMMAND ----------
@@ -190,6 +192,7 @@ model_B = mlflow.sklearn.load_model(model_uri)
 
 # COMMAND ----------
 
+
 class HousePriceModelWrapper(mlflow.pyfunc.PythonModel):
     def __init__(self, models):
         self.models = models
@@ -210,6 +213,7 @@ class HousePriceModelWrapper(mlflow.pyfunc.PythonModel):
         else:
             raise ValueError("Input must be a pandas DataFrame.")
 
+
 # COMMAND ----------
 
 X_train = train_set[num_features + cat_features + ["Booking_ID"]]
@@ -220,9 +224,7 @@ X_test = test_set[num_features + cat_features + ["Booking_ID"]]
 models = [model_A, model_B]
 wrapped_model = HousePriceModelWrapper(models)  # we pass the loaded models to the wrapper
 example_input = X_test.iloc[0:1]  # Select the first row for prediction as example
-example_prediction = wrapped_model.predict(
-    context=None,
-    model_input=example_input)
+example_prediction = wrapped_model.predict(context=None, model_input=example_input)
 print("Example Prediction:", example_prediction)
 
 # COMMAND ----------
@@ -232,22 +234,14 @@ model_name = f"{catalog_name}.{schema_name}.hotel-reservation_model_pyfunc_ab_te
 
 with mlflow.start_run() as run:
     run_id = run.info.run_id
-    signature = infer_signature(model_input=X_train,
-                                model_output={"Prediction": 1234.5,
-                                              "model": "Model B"})
-    dataset = mlflow.data.from_spark(train_set_spark,
-                                     table_name=f"{catalog_name}.{schema_name}.train_set",
-                                     version="0")
+    signature = infer_signature(model_input=X_train, model_output={"Prediction": 1234.5, "model": "Model B"})
+    dataset = mlflow.data.from_spark(train_set_spark, table_name=f"{catalog_name}.{schema_name}.train_set", version="0")
     mlflow.log_input(dataset, context="training")
     mlflow.pyfunc.log_model(
-        python_model=wrapped_model,
-        artifact_path="pyfunc-hotel-reservation-model-ab",
-        signature=signature
+        python_model=wrapped_model, artifact_path="pyfunc-hotel-reservation-model-ab", signature=signature
     )
 model_version = mlflow.register_model(
-    model_uri=f"runs:/{run_id}/pyfunc-hotel-reservation-model-ab",
-    name=model_name,
-    tags={"git_sha": f"{git_sha}"}
+    model_uri=f"runs:/{run_id}/pyfunc-hotel-reservation-model-ab", name=model_name, tags={"git_sha": f"{git_sha}"}
 )
 
 # COMMAND ----------
@@ -258,7 +252,7 @@ model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/{model_version
 predictions = model.predict(X_test.iloc[0:1])
 
 # Display predictions
-predictions
+print(predictions)
 
 # COMMAND ----------
 
@@ -313,7 +307,7 @@ required_columns = [
     "type_of_meal_plan",
     "room_type_reserved",
     "market_segment_type",
-    "Booking_ID"
+    "Booking_ID",
 ]
 
 train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").toPandas()
@@ -324,9 +318,7 @@ dataframe_records = [[record] for record in sampled_records]
 
 start_time = time.time()
 
-model_serving_endpoint = (
-    f"https://{host}/serving-endpoints/hotel-reservation-model-serving-ab-test/invocations"
-)
+model_serving_endpoint = f"https://{host}/serving-endpoints/hotel-reservation-model-serving-ab-test/invocations"
 
 response = requests.post(
     f"{model_serving_endpoint}",

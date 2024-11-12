@@ -3,13 +3,14 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
 import random
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import mlflow
 import pandas as pd
 import requests
@@ -19,6 +20,7 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
 from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
 from pyspark.sql import SparkSession
+
 from hotel_reservation.config import ProjectConfig
 
 # COMMAND ----------
@@ -88,7 +90,10 @@ preds_df = spark.createDataFrame(preds_df)
 # 1. Create the feature table in Databricks
 
 fe.create_table(
-    name=feature_table_name, primary_keys=["Booking_ID"], df=preds_df, description="Hotel Reservation predictions feature table"
+    name=feature_table_name,
+    primary_keys=["Booking_ID"],
+    df=preds_df,
+    description="Hotel Reservation predictions feature table",
 )
 
 # Enable Change Data Feed
@@ -118,7 +123,9 @@ online_table_pipeline = workspace.online_tables.create(name=online_table_name, s
 # Define features to look up from the feature table
 features = [
     FeatureLookup(
-        table_name=feature_table_name, lookup_key="Booking_ID", feature_names=["lead_time", "avg_price_per_room", "Predicted_booking_status"]
+        table_name=feature_table_name,
+        lookup_key="Booking_ID",
+        feature_names=["lead_time", "avg_price_per_room", "Predicted_booking_status"],
     )
 ]
 

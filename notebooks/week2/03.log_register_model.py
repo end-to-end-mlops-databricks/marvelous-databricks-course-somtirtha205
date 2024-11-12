@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -17,6 +17,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
 from hotel_reservation.config import ProjectConfig
 
 # COMMAND ----------
@@ -126,9 +127,10 @@ with mlflow.start_run(
 # COMMAND ----------
 
 model_version = mlflow.register_model(
-    model_uri=f'runs:/{run_id}/RandomForest',
+    model_uri=f"runs:/{run_id}/RandomForest",
     name=f"{catalog_name}.{schema_name}.hotel_reservation_model_basic",
-    tags={"git_sha": f"{git_sha}"})
+    tags={"git_sha": f"{git_sha}"},
+)
 
 # COMMAND ----------
 

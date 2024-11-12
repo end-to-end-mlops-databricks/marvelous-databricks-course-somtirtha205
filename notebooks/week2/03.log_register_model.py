@@ -1,4 +1,12 @@
 # Databricks notebook source
+# MAGIC %pip install ../hotel_reservation-0.0.1-py3-none-any.whl --force-reinstall
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
+
+# COMMAND ----------
+
 import matplotlib.pyplot as plt
 import mlflow
 from mlflow.models import infer_signature
@@ -9,7 +17,6 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-
 from hotel_reservation.config import ProjectConfig
 
 # COMMAND ----------
@@ -115,3 +122,17 @@ with mlflow.start_run(
     mlflow.log_input(dataset, context="training")
 
     mlflow.sklearn.log_model(sk_model=model, artifact_path="RandomForest", signature=signature)
+
+# COMMAND ----------
+
+model_version = mlflow.register_model(
+    model_uri=f'runs:/{run_id}/RandomForest',
+    name=f"{catalog_name}.{schema_name}.hotel_reservation_model_basic",
+    tags={"git_sha": f"{git_sha}"})
+
+# COMMAND ----------
+
+run = mlflow.get_run(run_id)
+dataset_info = run.inputs.dataset_inputs[0].dataset
+dataset_source = mlflow.data.get_source(dataset_info)
+dataset_source.load()

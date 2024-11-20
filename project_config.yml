@@ -1,5 +1,6 @@
 catalog_name: mlops_dev
 schema_name: hotel_reservation
+pipeline_id: b16f07f0-618e-44e3-94f1-64aed2949ad8
 
 parameters:
   n_estimators: 1000

@@ -12,22 +12,23 @@ Key functionality:
 The model uses both numerical and categorical features, including a custom hotel cancel percentage feature.
 """
 
-from databricks import feature_engineering
-from pyspark.sql import SparkSession
-from databricks.sdk import WorkspaceClient
-import mlflow
 import argparse
-from pyspark.sql import functions as F
-from sklearn.ensemble import RandomForestClassifier
+
+import matplotlib.pyplot as plt
+import mlflow
+from databricks import feature_engineering
+from databricks.feature_engineering import FeatureFunction, FeatureLookup
+from databricks.sdk import WorkspaceClient
 from mlflow.models import infer_signature
+from pyspark.sql import SparkSession
 from sklearn.compose import ColumnTransformer
-from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix, f1_score
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from databricks.feature_engineering import FeatureFunction, FeatureLookup
-from hotel_reservation.config import ProjectConfig
 
+from hotel_reservation.config import ProjectConfig
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -57,7 +58,7 @@ root_path = args.root_path
 git_sha = args.git_sha
 job_run_id = args.job_run_id
 
-config_path = (f"{root_path}/project_config.yml")
+config_path = f"{root_path}/project_config.yml"
 config = ProjectConfig.from_yaml(config_path=config_path)
 
 # Initialize the Databricks session and clients
@@ -83,7 +84,8 @@ function_name = f"{catalog_name}.{schema_name}.booking_cancelled_percentage"
 
 # Load training and test sets
 train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").drop(
-    "lead_time", "avg_price_per_room", "no_of_special_requests")
+    "lead_time", "avg_price_per_room", "no_of_special_requests"
+)
 test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
 
 # Load feature-engineered DataFrame
@@ -147,9 +149,7 @@ model = Pipeline(steps=[("preprocessor", preprocessor), ("classifier", RandomFor
 
 mlflow.set_experiment(experiment_name="/Shared/hotel-reservation-fe")
 
-with mlflow.start_run(tags={"branch": "week5",
-                            "git_sha": f"{git_sha}",
-                            "job_run_id": job_run_id}) as run:
+with mlflow.start_run(tags={"branch": "week5", "git_sha": f"{git_sha}", "job_run_id": job_run_id}) as run:
     run_id = run.info.run_id
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
@@ -181,5 +181,5 @@ with mlflow.start_run(tags={"branch": "week5",
         signature=signature,
     )
 
-model_uri=f"runs:/{run_id}/RandomForest"
-dbutils.jobs.taskValues.set(key="new_model_uri", value=model_uri)
+model_uri = f"runs:/{run_id}/RandomForest"
+workspace.dbutils.jobs.taskValues.set(key="new_model_uri", value=model_uri)

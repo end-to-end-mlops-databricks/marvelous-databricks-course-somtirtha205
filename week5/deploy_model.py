@@ -1,4 +1,3 @@
-
 """
 This script handles the deployment of a hotel reservation prediction model to a Databricks serving endpoint.
 Key functionality:
@@ -12,10 +11,11 @@ Key functionality:
 The endpoint is configured for feature-engineered model serving with automatic scaling.
 """
 
-import yaml
 import argparse
+
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput
+
 from hotel_reservation.config import ProjectConfig
 
 parser = argparse.ArgumentParser()
@@ -30,12 +30,12 @@ parser.add_argument(
 args = parser.parse_args()
 root_path = args.root_path
 
-config_path = (f"{root_path}/project_config.yml")
+config_path = f"{root_path}/project_config.yml"
 config = ProjectConfig.from_yaml(config_path=config_path)
 
-model_version = dbutils.jobs.taskValues.get(taskKey="evaluate_model", key="model_version")
-
 workspace = WorkspaceClient()
+
+model_version = workspace.dbutils.jobs.taskValues.get(taskKey="evaluate_model", key="model_version")
 
 catalog_name = config.catalog_name
 schema_name = config.schema_name

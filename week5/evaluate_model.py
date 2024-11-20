@@ -16,16 +16,16 @@ The evaluation process:
 6. Updates pipeline task values with results
 """
 
+import argparse
+
+import mlflow
 from databricks import feature_engineering
 from databricks.sdk import WorkspaceClient
-from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
-from pyspark.sql.functions import col
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
-import mlflow
-import argparse
-from hotel_reservation.config import ProjectConfig
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
 
+from hotel_reservation.config import ProjectConfig
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -66,7 +66,7 @@ new_model_uri = args.new_model_uri
 job_run_id = args.job_run_id
 git_sha = args.git_sha
 
-config_path = (f"{root_path}/project_config.yml")
+config_path = f"{root_path}/project_config.yml"
 config = ProjectConfig.from_yaml(config_path=config_path)
 
 spark = SparkSession.builder.getOrCreate()
@@ -115,12 +115,12 @@ predictions_old = predictions_previous.withColumnRenamed("prediction", "predicti
 test_set = test_set.select("Booking_ID", "booking_status")
 
 # Join the DataFrames on the 'Booking_ID' column
-df = test_set \
-    .join(predictions_new, on="Booking_ID") \
-    .join(predictions_old, on="Booking_ID")
+df = test_set.join(predictions_new, on="Booking_ID").join(predictions_old, on="Booking_ID")
 
 # Calculate the Area Under ROC Curve for each model
-evaluator = BinaryClassificationEvaluator(labelCol="booking_status", predictionCol="prediction_new", metricName="areaUnderROC")
+evaluator = BinaryClassificationEvaluator(
+    labelCol="booking_status", predictionCol="prediction_new", metricName="areaUnderROC"
+)
 area_roc_new = evaluator.evaluate(df)
 
 evaluator.setPredictionCol("prediction_old")
@@ -130,13 +130,13 @@ area_roc_old = evaluator.evaluate(df)
 print(f"Area Under ROC for New Model: {area_roc_new}")
 print(f"Area Under ROC for Old Model: {area_roc_old}")
 
-#Calculate F1 score for new model
+# Calculate F1 score for new model
 
 # Calculate true positives, true negatives, false positives, false negatives
-tp = predictions_new.filter((col(target) == 1) & (col('prediction_new') == 1)).count()
-tn = predictions_new.filter((col(target) == 0) & (col('prediction_new') == 0)).count()
-fp = predictions_new.filter((col(target) == 0) & (col('prediction_new') == 1)).count()
-fn = predictions_new.filter((col(target) == 1) & (col('prediction_new') == 0)).count()
+tp = predictions_new.filter((col(target) == 1) & (col("prediction_new") == 1)).count()
+tn = predictions_new.filter((col(target) == 0) & (col("prediction_new") == 0)).count()
+fp = predictions_new.filter((col(target) == 0) & (col("prediction_new") == 1)).count()
+fn = predictions_new.filter((col(target) == 1) & (col("prediction_new") == 0)).count()
 
 precision = tp / (tp + fp) if (tp + fp) != 0 else 0
 
@@ -146,13 +146,13 @@ f1_measure_new = 2 * (precision * recall) / (precision + recall) if (precision +
 
 print(f"F1 measure of New Model: {f1_measure_new}")
 
-#Calculate F1 score for old model
+# Calculate F1 score for old model
 
 # Calculate true positives, true negatives, false positives, false negatives
-tp = predictions_old.filter((col(target) == 1) & (col('predictions_old') == 1)).count()
-tn = predictions_old.filter((col(target) == 0) & (col('predictions_old') == 0)).count()
-fp = predictions_old.filter((col(target) == 0) & (col('predictions_old') == 1)).count()
-fn = predictions_old.filter((col(target) == 1) & (col('predictions_old') == 0)).count()
+tp = predictions_old.filter((col(target) == 1) & (col("predictions_old") == 1)).count()
+tn = predictions_old.filter((col(target) == 0) & (col("predictions_old") == 0)).count()
+fp = predictions_old.filter((col(target) == 0) & (col("predictions_old") == 1)).count()
+fn = predictions_old.filter((col(target) == 1) & (col("predictions_old") == 0)).count()
 
 precision = tp / (tp + fp) if (tp + fp) != 0 else 0
 
@@ -165,14 +165,14 @@ print(f"F1 measure of Old Model: {f1_measure_old}")
 if f1_measure_new > f1_measure_old:
     print("New model is better based on f1 score.")
     model_version = mlflow.register_model(
-      model_uri=new_model_uri,
-      name=f"{catalog_name}.{schema_name}.hotel_reservation_model_fe",
-      tags={"git_sha": f"{git_sha}",
-            "job_run_id": job_run_id})
+        model_uri=new_model_uri,
+        name=f"{catalog_name}.{schema_name}.hotel_reservation_model_fe",
+        tags={"git_sha": f"{git_sha}", "job_run_id": job_run_id},
+    )
 
     print("New model registered with version:", model_version.version)
-    dbutils.jobs.taskValues.set(key="model_version", value=model_version.version)
-    dbutils.jobs.taskValues.set(key="model_update", value=1)
+    workspace.dbutils.jobs.taskValues.set(key="model_version", value=model_version.version)
+    workspace.dbutils.jobs.taskValues.set(key="model_update", value=1)
 else:
     print("Old model is better based on f1 score.")
-    dbutils.jobs.taskValues.set(key="model_update", value=0)
+    workspace.dbutils.jobs.taskValues.set(key="model_update", value=0)

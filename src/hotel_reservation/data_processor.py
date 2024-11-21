@@ -40,6 +40,7 @@ class DataProcessor:
         )
 
         self.labelencoder = LabelEncoder()
+        self.df[self.config.target] = self.labelencoder.fit_transform(self.df[self.config.target])
 
     def split_data(self, test_size=0.2, random_state=42):
         """Split the DataFrame (self.df) into training and test sets."""

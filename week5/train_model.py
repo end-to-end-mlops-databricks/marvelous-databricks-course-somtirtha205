@@ -1,5 +1,5 @@
 """
-This script trains a Random Forest model for house price prediction with feature engineering.
+This script trains a Random Forest model for hotel reservation prediction with feature engineering.
 Key functionality:
 - Loads training and test data from Databricks tables
 - Performs feature engineering using Databricks Feature Store
@@ -76,10 +76,11 @@ target = config.target
 parameters = config.parameters
 catalog_name = config.catalog_name
 schema_name = config.schema_name
+id = config.id
 
 
 # Define table names and function name
-feature_table_name = f"{catalog_name}.{schema_name}.house_features"
+feature_table_name = f"{catalog_name}.{schema_name}.hotel_features"
 function_name = f"{catalog_name}.{schema_name}.booking_cancelled_percentage"
 
 # Load training and test sets

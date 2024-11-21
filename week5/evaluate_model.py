@@ -91,7 +91,7 @@ model_version = serving_endpoint.config.served_models[0].model_version
 previous_model_uri = f"models:/{model_name}/{model_version}"
 
 # Load test set and create additional features in Spark DataFrame
-test_set = spark.table(f"{catalog_name}.{schema_name}.test_set")
+test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
 
 # Cancel Percentage in Test set
 try:
@@ -101,6 +101,8 @@ try:
     ) * 100
 except ZeroDivisionError:
     test_set["cancel_percentage"] = 0
+
+test_set = spark.createDataFrame(test_set)
 
 # Select the necessary columns for prediction and target
 X_test_spark = test_set.select(num_features + cat_features + ["cancel_percentage", "Booking_ID"])
@@ -119,11 +121,11 @@ df = test_set.join(predictions_new, on="Booking_ID").join(predictions_old, on="B
 
 # Calculate the Area Under ROC Curve for each model
 evaluator = BinaryClassificationEvaluator(
-    labelCol="booking_status", predictionCol="prediction_new", metricName="areaUnderROC"
+    labelCol="booking_status", rawPredictionCol="prediction_new", metricName="areaUnderROC"
 )
 area_roc_new = evaluator.evaluate(df)
 
-evaluator.setPredictionCol("prediction_old")
+evaluator.setRawPredictionCol("prediction_old")
 area_roc_old = evaluator.evaluate(df)
 
 # Compare models based on Area Under ROC

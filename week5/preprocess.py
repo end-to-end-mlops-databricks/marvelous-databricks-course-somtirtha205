@@ -23,7 +23,7 @@ import time
 
 from databricks.sdk import WorkspaceClient
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, max
 
 from hotel_reservation.config import ProjectConfig
 
@@ -53,17 +53,22 @@ pipeline_id = config.pipeline_id
 source_data = spark.table(f"{catalog_name}.{schema_name}.source_data")
 
 # Get max update timestamps from existing data
-df_train = spark.table(f"{catalog_name}.{schema_name}.train_set")
-max_train_timestamp = df_train.select(max(df_train.update_timestamp_utc).alias("max_update_timestamp")).collect()[0][
-    "max_update_timestamp"
-]
+max_train_timestamp = (
+    spark.table(f"{catalog_name}.{schema_name}.train_set")
+    .select(max("update_timestamp_utc").alias("max_update_timestamp"))
+    .collect()[0]["max_update_timestamp"]
+)
 
-df_test = spark.table(f"{catalog_name}.{schema_name}.test_set")
-max_test_timestamp = df_test.select(max(df_test.update_timestamp_utc).alias("max_update_timestamp")).collect()[0][
-    "max_update_timestamp"
-]
+max_test_timestamp = (
+    spark.table(f"{catalog_name}.{schema_name}.test_set")
+    .select(max("update_timestamp_utc").alias("max_update_timestamp"))
+    .collect()[0]["max_update_timestamp"]
+)
 
-latest_timestamp = max(max_train_timestamp, max_test_timestamp)
+if max_train_timestamp >= max_test_timestamp:
+    latest_timestamp = max_train_timestamp
+else:
+    latest_timestamp = max_test_timestamp
 
 # Filter source_data for rows with update_timestamp_utc greater than the latest_timestamp
 new_data = source_data.filter(col("update_timestamp_utc") > latest_timestamp)

@@ -5,7 +5,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
 
 
 class DataProcessor:
@@ -13,6 +13,7 @@ class DataProcessor:
         self.df = None
         self.config = config
         self.preprocessor = None
+        self.labelencoder = None
 
     def preprocess_data(self, filepath, spark):
         # Load Data
@@ -37,6 +38,8 @@ class DataProcessor:
                 ("cat", categorical_transformer, self.config.cat_features),
             ]
         )
+
+        self.labelencoder = LabelEncoder()
 
     def split_data(self, test_size=0.2, random_state=42):
         """Split the DataFrame (self.df) into training and test sets."""

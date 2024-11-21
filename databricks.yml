@@ -1,19 +1,123 @@
-# This is a Databricks asset bundle definition for marvelous-databricks-course-somtirtha205.
+# This is a Databricks asset bundle definition for module-code-examples.
 # The Databricks extension requires databricks.yml configuration file.
 # See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
 
 bundle:
   name: marvelous-databricks-course-somtirtha205
 
+artifacts:
+  default:
+    type: whl
+    build: python -m build
+    path: .
+
+variables:
+  root_path:
+    description: root_path for the target
+    default: /Workspace/Users/somtirthab@gmail.com/.bundle/${bundle.name}/${bundle.target}
+  git_sha:
+    description: git_sha
+    default: b8c581ac6a89be32b4e20561c7f1fff9b8b89632
+  schedule_pause_status:
+    description: schedule pause status
+    default: UNPAUSED
+
+
+resources:
+  jobs:
+    hotel-reservation:
+      name: hotel-reservation-workflow
+      tags:
+        project_name: "hotel-reservation"
+      job_clusters:
+        - job_cluster_key: "hotel-reservation-cluster"
+          new_cluster:
+            spark_version: "15.4.x-scala2.12"
+            data_security_mode: "SINGLE_USER"
+            node_type_id: "Standard_DS3_v2"
+            driver_node_type_id: "Standard_DS3_v2"
+            autoscale:
+              min_workers: 1
+              max_workers: 1
+
+      tasks:
+        - task_key: "preprocessing"
+          job_cluster_key: "hotel-reservation-cluster"
+          spark_python_task:
+            python_file: "week5/preprocess.py"
+            parameters:
+              - "--root_path"
+              - ${var.root_path}
+          libraries:
+           - whl: ./dist/*.whl
+        - task_key: if_refreshed
+          condition_task:
+            op: "EQUAL_TO"
+            left: "{{tasks.preprocessing.values.refreshed}}"
+            right: "1"
+          depends_on:
+            - task_key: "preprocessing"
+        - task_key: "train_model"
+          depends_on:
+            - task_key: "if_refreshed"
+              outcome: "true"
+          job_cluster_key: "hotel-reservation-cluster"
+          spark_python_task:
+            python_file: "week5/train_model.py"
+            parameters:
+              - "--root_path"
+              - ${var.root_path}
+              - "--git_sha"
+              - ${var.git_sha}
+              - "--job_run_id"
+              - "{{job.id}}"
+          libraries:
+            - whl: ./dist/*.whl
+        - task_key: "evaluate_model"
+          depends_on:
+            - task_key: "train_model"
+          job_cluster_key: "hotel-reservation-cluster"
+          spark_python_task:
+            python_file: "week5/evaluate_model.py"
+            parameters:
+              - "--root_path"
+              - ${var.root_path}
+              - "--new_model_uri"
+              - "{{tasks.train_model.values.new_model_uri}}"
+              - "--job_run_id"
+              - "{{job.id}}"
+              - "--git_sha"
+              - ${var.git_sha}
+          libraries:
+            - whl: ./dist/*.whl
+        - task_key: model_update
+          condition_task:
+            op: "EQUAL_TO"
+            left: "{{tasks.evaluate_model.values.model_update}}"
+            right: "1"
+          depends_on:
+            - task_key: "evaluate_model"
+        - task_key: "deploy_model"
+          depends_on:
+            - task_key: "model_update"
+              outcome: "true"
+          job_cluster_key: "hotel-reservation-cluster"
+          spark_python_task:
+            python_file: "week5/deploy_model.py"
+            parameters:
+              - "--root_path"
+              - ${var.root_path}
+          libraries:
+            - whl: ./dist/*.whl
+
 targets:
+  #prod:
+  #  workspace:
+  #    host: https://dbc-643c4c2b-d6c9.cloud.databricks.com
+  #    root_path: ${var.root_path}
+
   dev:
     mode: development
-    default: true
     workspace:
-      host: https://adb-1846957892648178.18.azuredatabricks.net
-
-  ## Optionally, there could be 'staging' or 'prod' targets here.
-  #
-  # prod:
-  #   workspace:
-  #     host: https://adb-1846957892648178.18.azuredatabricks.net
+      host: https://adb-1846957892648178.18.azuredatabricks.net/
+      root_path: /Workspace/Users/somtirthab@gmail.com/.bundle/${bundle.name}/${bundle.target}

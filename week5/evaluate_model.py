@@ -66,7 +66,7 @@ new_model_uri = args.new_model_uri
 job_run_id = args.job_run_id
 git_sha = args.git_sha
 
-config_path = f"{root_path}/project_config.yml"
+config_path = f"{root_path}/files/project_config.yml"
 config = ProjectConfig.from_yaml(config_path=config_path)
 
 spark = SparkSession.builder.getOrCreate()

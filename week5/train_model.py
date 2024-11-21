@@ -58,7 +58,7 @@ root_path = args.root_path
 git_sha = args.git_sha
 job_run_id = args.job_run_id
 
-config_path = f"{root_path}/project_config.yml"
+config_path = f"{root_path}/files/project_config.yml"
 config = ProjectConfig.from_yaml(config_path=config_path)
 
 # Initialize the Databricks session and clients

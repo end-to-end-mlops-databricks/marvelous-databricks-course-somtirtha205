@@ -42,12 +42,12 @@ args = parser.parse_args()
 root_path = args.root_path
 config_path = f"{root_path}/files/project_config.yml"
 config = ProjectConfig.from_yaml(config_path=config_path)
-pipeline_id = config.pipeline_id
 
 spark = SparkSession.builder.getOrCreate()
 
 catalog_name = config.catalog_name
 schema_name = config.schema_name
+pipeline_id = config.pipeline_id
 
 # Load source_data table
 source_data = spark.table(f"{catalog_name}.{schema_name}.source_data")

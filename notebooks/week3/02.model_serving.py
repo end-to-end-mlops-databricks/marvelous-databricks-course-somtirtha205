@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 

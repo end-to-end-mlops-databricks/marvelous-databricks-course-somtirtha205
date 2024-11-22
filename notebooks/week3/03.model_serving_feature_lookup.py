@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -17,7 +17,11 @@ import time
 
 import requests
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.catalog import OnlineTable, OnlineTablesAPI, OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
+from databricks.sdk.service.catalog import (
+    OnlineTable,
+    OnlineTableSpec,
+    OnlineTableSpecTriggeredSchedulingPolicy,
+)
 from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
 from pyspark.sql import SparkSession
 
@@ -47,7 +51,9 @@ spec = OnlineTableSpec(
     perform_full_copy=False,
 )
 
-online_table_pipeline = workspace.online_tables.create(table=OnlineTable.from_dict({"name": online_table_name, "spec": spec.as_dict()}))
+online_table_pipeline = workspace.online_tables.create(
+    table=OnlineTable.from_dict({"name": online_table_name, "spec": spec.as_dict()})
+)
 
 # COMMAND ----------
 
@@ -111,7 +117,7 @@ dataframe_records = [[record] for record in sampled_records]
 
 # COMMAND ----------
 
-train_set.dtypes
+# MAGIC train_set.dtypes
 
 # COMMAND ----------
 
@@ -142,4 +148,4 @@ house_features = spark.table(f"{catalog_name}.{schema_name}.hotel_features").toP
 
 # COMMAND ----------
 
-house_features.dtypes
+# MAGIC house_features.dtypes

@@ -112,17 +112,15 @@ y_test_spark = test_set.select("Booking_ID", target)
 predictions_previous = fe.score_batch(model_uri=previous_model_uri, df=X_test_spark)
 predictions_new = fe.score_batch(model_uri=new_model_uri, df=X_test_spark)
 
-predictions_new = predictions_new.withColumnRenamed("prediction", "prediction_new")
-predictions_old = predictions_previous.withColumnRenamed("prediction", "prediction_old")
-test_set = test_set.select("Booking_ID", "booking_status")
+predict_new = predictions_new.withColumnRenamed("prediction", "prediction_new")
+predict_old = predictions_previous.withColumnRenamed("prediction", "prediction_old")
+test_set = test_set.select("Booking_ID", target)
 
 # Join the DataFrames on the 'Booking_ID' column
-df = test_set.join(predictions_new, on="Booking_ID").join(predictions_old, on="Booking_ID")
+df = test_set.join(predict_new, on="Booking_ID").join(predict_old, on="Booking_ID")
 
 # Calculate the Area Under ROC Curve for each model
-evaluator = BinaryClassificationEvaluator(
-    labelCol="booking_status", rawPredictionCol="prediction_new", metricName="areaUnderROC"
-)
+evaluator = BinaryClassificationEvaluator(labelCol=target, rawPredictionCol="prediction_new", metricName="areaUnderROC")
 area_roc_new = evaluator.evaluate(df)
 
 evaluator.setRawPredictionCol("prediction_old")
@@ -135,10 +133,10 @@ print(f"Area Under ROC for Old Model: {area_roc_old}")
 # Calculate F1 score for new model
 
 # Calculate true positives, true negatives, false positives, false negatives
-tp = predictions_new.filter((col(target) == 1) & (col("prediction_new") == 1)).count()
-tn = predictions_new.filter((col(target) == 0) & (col("prediction_new") == 0)).count()
-fp = predictions_new.filter((col(target) == 0) & (col("prediction_new") == 1)).count()
-fn = predictions_new.filter((col(target) == 1) & (col("prediction_new") == 0)).count()
+tp = df.filter((col(target) == 1) & (col("prediction_new") == 1)).count()
+tn = df.filter((col(target) == 0) & (col("prediction_new") == 0)).count()
+fp = df.filter((col(target) == 0) & (col("prediction_new") == 1)).count()
+fn = df.filter((col(target) == 1) & (col("prediction_new") == 0)).count()
 
 precision = tp / (tp + fp) if (tp + fp) != 0 else 0
 
@@ -151,10 +149,10 @@ print(f"F1 measure of New Model: {f1_measure_new}")
 # Calculate F1 score for old model
 
 # Calculate true positives, true negatives, false positives, false negatives
-tp = predictions_old.filter((col(target) == 1) & (col("predictions_old") == 1)).count()
-tn = predictions_old.filter((col(target) == 0) & (col("predictions_old") == 0)).count()
-fp = predictions_old.filter((col(target) == 0) & (col("predictions_old") == 1)).count()
-fn = predictions_old.filter((col(target) == 1) & (col("predictions_old") == 0)).count()
+tp = df.filter((col(target) == 1) & (col("prediction_old") == 1)).count()
+tn = df.filter((col(target) == 0) & (col("prediction_old") == 0)).count()
+fp = df.filter((col(target) == 0) & (col("prediction_old") == 1)).count()
+fn = df.filter((col(target) == 1) & (col("prediction_old") == 0)).count()
 
 precision = tp / (tp + fp) if (tp + fp) != 0 else 0
 

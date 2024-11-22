@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-# MAGIC dbutils.library.restartPython()
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -17,7 +17,7 @@ import requests
 from databricks import feature_engineering
 from databricks.feature_engineering import FeatureLookup
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
+from databricks.sdk.service.catalog import OnlineTable, OnlineTablesAPI, OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
 from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
 from pyspark.sql import SparkSession
 
@@ -114,7 +114,7 @@ spec = OnlineTableSpec(
 )
 
 # Create the online table in Databricks
-online_table_pipeline = workspace.online_tables.create(name=online_table_name, spec=spec)
+online_table_pipeline = workspace.online_tables.create(table=OnlineTable.from_dict({"name": online_table_name, "spec": spec.as_dict()}))
 
 # COMMAND ----------
 

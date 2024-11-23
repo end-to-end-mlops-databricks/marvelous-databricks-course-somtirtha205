@@ -40,7 +40,7 @@ workspace.serving_endpoints.create(
                 entity_name=f"{catalog_name}.{schema_name}.hotel_reservation_model_basic",
                 scale_to_zero_enabled=True,
                 workload_size="Small",
-                entity_version=2,
+                entity_version=1,
             )
         ],
         # Optional if only 1 entity is served

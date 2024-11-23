@@ -17,7 +17,11 @@ import time
 
 import requests
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.catalog import OnlineTableSpec, OnlineTableSpecTriggeredSchedulingPolicy
+from databricks.sdk.service.catalog import (
+    OnlineTable,
+    OnlineTableSpec,
+    OnlineTableSpecTriggeredSchedulingPolicy,
+)
 from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
 from pyspark.sql import SparkSession
 
@@ -47,7 +51,9 @@ spec = OnlineTableSpec(
     perform_full_copy=False,
 )
 
-online_table_pipeline = workspace.online_tables.create(name=online_table_name, spec=spec)
+online_table_pipeline = workspace.online_tables.create(
+    table=OnlineTable.from_dict({"name": online_table_name, "spec": spec.as_dict()})
+)
 
 # COMMAND ----------
 
@@ -64,7 +70,7 @@ workspace.serving_endpoints.create(
                 entity_name=f"{catalog_name}.{schema_name}.hotel_reservation_model_fe",
                 scale_to_zero_enabled=True,
                 workload_size="Small",
-                entity_version=2,
+                entity_version=1,
             )
         ]
     ),

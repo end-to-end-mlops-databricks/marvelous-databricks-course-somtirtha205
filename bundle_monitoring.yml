@@ -14,7 +14,7 @@ resources:
             autoscale:
               min_workers: 1
               max_workers: 1
-        
+
       tasks:
         - task_key: "refresh_monitor_table"
           job_cluster_key: "hotel-reservation-cluster"

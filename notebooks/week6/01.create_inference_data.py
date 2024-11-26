@@ -8,7 +8,7 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# Magic dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -17,11 +17,19 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-import pandas as pd
-from pyspark.sql.functions import col
-from pyspark.sql.functions import current_timestamp, to_utc_timestamp
+import time
+
 import numpy as np
+import pandas as pd
+from databricks.sdk import WorkspaceClient
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import current_timestamp, to_utc_timestamp
+from sklearn import set_config
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from hotel_reservation.config import ProjectConfig
 
@@ -48,15 +56,6 @@ test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
 # MAGIC ### Get the most important features using random forest model
 
 # COMMAND ----------
-
-import pandas as pd
-import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn import set_config
 
 # Define features and target (adjust columns accordingly)
 features = train_set[num_features + cat_features]
@@ -89,8 +88,10 @@ model.fit(features, target)
 clf = model[-1]
 
 # Identify the most important features
-data = list(zip(clf.feature_names_in_, clf.feature_importances_))
-feature_importances = pd.DataFrame(data, columns=['Feature', 'Importance']).sort_values(by='Importance', ascending=False)
+data = list(zip(clf.feature_names_in_, clf.feature_importances_, strict=False))
+feature_importances = pd.DataFrame(data, columns=["Feature", "Importance"]).sort_values(
+    by="Importance", ascending=False
+)
 
 print("Top 5 important features:")
 print(feature_importances.head(5))
@@ -102,9 +103,6 @@ print(feature_importances.head(5))
 
 # COMMAND ----------
 
-from pandas.api.types import is_numeric_dtype, is_datetime64_any_dtype, is_object_dtype
-import numpy as np
-import pandas as pd
 
 def create_synthetic_data(df, drift=False, num_rows=1000):
     synthetic_data = pd.DataFrame()
@@ -149,12 +147,13 @@ def create_synthetic_data(df, drift=False, num_rows=1000):
 
     return synthetic_data
 
+
 # Generate and visualize fake data
 
 combined_set = pd.concat([train_set, test_set], ignore_index=True)
 existing_ids = set(int(id) for id in combined_set["Booking_ID"].str[3:8].astype(int))
 
-synthetic_data_normal = create_synthetic_data(train_set,  drift=False, num_rows=1000)
+synthetic_data_normal = create_synthetic_data(train_set, drift=False, num_rows=1000)
 synthetic_data_skewed = create_synthetic_data(train_set, drift=True, num_rows=1000)
 
 print(synthetic_data_normal.dtypes)
@@ -172,18 +171,14 @@ synthetic_normal_df_with_ts = synthetic_normal_df.withColumn(
     "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
 )
 
-synthetic_normal_df_with_ts.write.mode("append").saveAsTable(
-    f"{catalog_name}.{schema_name}.inference_set_normal"
-)
+synthetic_normal_df_with_ts.write.mode("append").saveAsTable(f"{catalog_name}.{schema_name}.inference_set_normal")
 
 synthetic_skewed_df = spark.createDataFrame(synthetic_data_skewed)
 synthetic_skewed_df_with_ts = synthetic_skewed_df.withColumn(
     "update_timestamp_utc", to_utc_timestamp(current_timestamp(), "UTC")
 )
 
-synthetic_skewed_df_with_ts.write.mode("append").saveAsTable(
-    f"{catalog_name}.{schema_name}.inference_set_skewed"
-)
+synthetic_skewed_df_with_ts.write.mode("append").saveAsTable(f"{catalog_name}.{schema_name}.inference_set_skewed")
 
 # COMMAND ----------
 
@@ -192,36 +187,31 @@ synthetic_skewed_df_with_ts.write.mode("append").saveAsTable(
 
 # COMMAND ----------
 
-import time
-from databricks.sdk import WorkspaceClient
-
 workspace = WorkspaceClient()
 
-#write into feature table; update online table
+# write into feature table; update online table
 spark.sql(f"""
     INSERT INTO {catalog_name}.{schema_name}.hotel_features
     SELECT Booking_ID, lead_time, avg_price_per_room, no_of_special_requests
     FROM {catalog_name}.{schema_name}.inference_set_normal
 """)
 
-#write into feature table; update online table
+# write into feature table; update online table
 spark.sql(f"""
     INSERT INTO {catalog_name}.{schema_name}.hotel_features
     SELECT Booking_ID, lead_time, avg_price_per_room, no_of_special_requests
     FROM {catalog_name}.{schema_name}.inference_set_skewed
 """)
-  
-update_response = workspace.pipelines.start_update(
-    pipeline_id=pipeline_id, full_refresh=False)
+
+update_response = workspace.pipelines.start_update(pipeline_id=pipeline_id, full_refresh=False)
 while True:
-    update_info = workspace.pipelines.get_update(pipeline_id=pipeline_id, 
-                            update_id=update_response.update_id)
+    update_info = workspace.pipelines.get_update(pipeline_id=pipeline_id, update_id=update_response.update_id)
     state = update_info.update.state.value
-    if state == 'COMPLETED':
+    if state == "COMPLETED":
         break
-    elif state in ['FAILED', 'CANCELED']:
+    elif state in ["FAILED", "CANCELED"]:
         raise SystemError("Online table failed to update.")
-    elif state == 'WAITING_FOR_RESOURCES':
+    elif state == "WAITING_FOR_RESOURCES":
         print("Pipeline is waiting for resources.")
     else:
         print(f"Pipeline is in {state} state.")

@@ -8,21 +8,23 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-import pandas as pd
-from pyspark.sql.functions import col
-from pyspark.sql.functions import current_timestamp, to_utc_timestamp
-import numpy as np
 import datetime
 import itertools
+import time
+
+import requests
+from databricks.sdk import WorkspaceClient
 from pyspark.sql import SparkSession
 
 from hotel_reservation.config import ProjectConfig
 
 spark = SparkSession.builder.getOrCreate()
+
+workspace = WorkspaceClient()
 
 # Load configuration
 config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
@@ -38,16 +40,10 @@ test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
 
 # COMMAND ----------
 
-token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+token = workspace.dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
 host = spark.conf.get("spark.databricks.workspaceUrl")
 
 # COMMAND ----------
-
-from databricks.sdk import WorkspaceClient
-import requests
-import time
-
-workspace = WorkspaceClient()
 
 # Required columns for inference
 required_columns = [
@@ -75,6 +71,7 @@ test_set_records = test_set[required_columns].to_dict(orient="records")
 
 # COMMAND ----------
 
+
 # Two different way to send request to the endpoint
 # 1. Using https endpoint
 def send_request_https(dataframe_record):
@@ -86,13 +83,14 @@ def send_request_https(dataframe_record):
     )
     return response
 
+
 # 2. Using workspace client
 def send_request_workspace(dataframe_record):
     response = workspace.serving_endpoints.query(
-        name="hotel-reservation-model-serving-fe",
-        dataframe_records=[dataframe_record]
+        name="hotel-reservation-model-serving-fe", dataframe_records=[dataframe_record]
     )
     return response
+
 
 # COMMAND ----------
 

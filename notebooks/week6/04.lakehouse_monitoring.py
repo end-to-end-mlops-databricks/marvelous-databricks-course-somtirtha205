@@ -3,11 +3,10 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-import yaml
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import (
     MonitorInferenceLog,
@@ -15,7 +14,7 @@ from databricks.sdk.service.catalog import (
 )
 from pyspark.sql import SparkSession
 
-from house_price.config import ProjectConfig
+from hotel_reservation.config import ProjectConfig
 
 spark = SparkSession.builder.getOrCreate()
 
@@ -44,8 +43,7 @@ workspace.quality_monitors.create(
     ),
 )
 
-spark.sql(f"ALTER TABLE {monitoring_table} "
-          "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);")
+spark.sql(f"ALTER TABLE {monitoring_table} " "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);")
 
 # COMMAND ----------
 

@@ -8,7 +8,7 @@
 
 # COMMAND ----------
 
-# MAGIC dbutils.library.restartPython()
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -94,8 +94,8 @@ def send_request_workspace(dataframe_record):
 
 # COMMAND ----------
 
-# Loop over test records and send requests for 20 minutes
-end_time = datetime.datetime.now() + datetime.timedelta(minutes=20)
+# Loop over test records and send requests for 15 minutes
+end_time = datetime.datetime.now() + datetime.timedelta(minutes=15)
 for index, record in enumerate(itertools.cycle(test_set_records)):
     if datetime.datetime.now() >= end_time:
         break
@@ -107,8 +107,8 @@ for index, record in enumerate(itertools.cycle(test_set_records)):
 
 # COMMAND ----------
 
-# Loop over normal records and send requests for 20 minutes
-end_time = datetime.datetime.now() + datetime.timedelta(minutes=20)
+# Loop over normal records and send requests for 15 minutes
+end_time = datetime.datetime.now() + datetime.timedelta(minutes=15)
 for index, record in enumerate(itertools.cycle(sampled_normal_records)):
     if datetime.datetime.now() >= end_time:
         break
@@ -120,8 +120,8 @@ for index, record in enumerate(itertools.cycle(sampled_normal_records)):
 
 # COMMAND ----------
 
-# Loop over skewed records and send requests for 20 minutes
-end_time = datetime.datetime.now() + datetime.timedelta(minutes=20)
+# Loop over skewed records and send requests for 15 minutes
+end_time = datetime.datetime.now() + datetime.timedelta(minutes=15)
 for index, record in enumerate(itertools.cycle(sampled_skewed_records)):
     if datetime.datetime.now() >= end_time:
         break

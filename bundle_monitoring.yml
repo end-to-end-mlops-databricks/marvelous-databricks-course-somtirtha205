@@ -1,6 +1,6 @@
 resources:
   jobs:
-    house-price-monitor-update:
+    hotel-reservation-monitor-update:
       name: hotel-reservation-monitor-update-workflow
       tags:
         project_name: "hotel-reservation"

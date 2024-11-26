@@ -13,7 +13,7 @@ config = ProjectConfig.from_yaml(config_path="../project_config.yml")
 catalog_name = config.catalog_name
 schema_name = config.schema_name
 
-inf_table = spark.sql(f"SELECT * FROM {catalog_name}.{schema_name}.`model-serving-fe_payload`")
+inf_table = spark.sql(f"SELECT * FROM {catalog_name}.{schema_name}.hotel-reservation-model-serving-fe_payload")
 
 request_schema = StructType(
     [

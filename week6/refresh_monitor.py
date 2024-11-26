@@ -1,11 +1,11 @@
+from databricks.connect import DatabricksSession
 from databricks.sdk import WorkspaceClient
-from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType, IntegerType, StringType, StructField, StructType
 
 from hotel_reservation.config import ProjectConfig
 
-spark = SparkSession.builder.getOrCreate()
+spark = DatabricksSession.builder.getOrCreate()
 workspace = WorkspaceClient()
 
 # Load configuration
@@ -13,7 +13,7 @@ config = ProjectConfig.from_yaml(config_path="../project_config.yml")
 catalog_name = config.catalog_name
 schema_name = config.schema_name
 
-inf_table = spark.sql(f"SELECT * FROM {catalog_name}.{schema_name}.hotel-reservation-model-serving-fe_payload")
+inf_table = spark.sql(f"SELECT * FROM {catalog_name}.{schema_name}.`hotel-reservation-model-serving-fe_payload`")
 
 request_schema = StructType(
     [
@@ -108,9 +108,9 @@ df_final_with_status = (
     .dropna(subset=["booking_status", "prediction"])
 )
 
-house_features = spark.table(f"{catalog_name}.{schema_name}.house_features")
+hotel_features = spark.table(f"{catalog_name}.{schema_name}.hotel_features")
 
-df_final_with_features = df_final_with_status.join(house_features, on="Booking_ID", how="left")
+df_final_with_features = df_final_with_status.join(hotel_features, on="Booking_ID", how="left")
 
 df_final_with_features = df_final_with_features.withColumn(
     "avg_price_per_room", F.col("avg_price_per_room").cast("double")

@@ -1,13 +1,13 @@
 import argparse
 
+from databricks.connect import DatabricksSession
 from databricks.sdk import WorkspaceClient
-from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType, IntegerType, StringType, StructField, StructType
 
 from hotel_reservation.config import ProjectConfig
 
-spark = SparkSession.builder.getOrCreate()
+spark = DatabricksSession.builder.getOrCreate()
 workspace = WorkspaceClient()
 
 parser = argparse.ArgumentParser()

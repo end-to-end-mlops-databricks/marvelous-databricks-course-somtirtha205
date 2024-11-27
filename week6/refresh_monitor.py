@@ -1,15 +1,30 @@
-from databricks.connect import DatabricksSession
+import argparse
+
 from databricks.sdk import WorkspaceClient
+from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType, IntegerType, StringType, StructField, StructType
 
 from hotel_reservation.config import ProjectConfig
 
-spark = DatabricksSession.builder.getOrCreate()
+spark = SparkSession.builder.getOrCreate()
 workspace = WorkspaceClient()
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--root_path",
+    action="store",
+    default=None,
+    type=str,
+    required=True,
+)
+
+args = parser.parse_args()
+root_path = args.root_path
+
 # Load configuration
-config = ProjectConfig.from_yaml(config_path="../project_config.yml")
+config_path = f"{root_path}/files/project_config.yml"
+config = ProjectConfig.from_yaml(config_path=config_path)
 catalog_name = config.catalog_name
 schema_name = config.schema_name
 

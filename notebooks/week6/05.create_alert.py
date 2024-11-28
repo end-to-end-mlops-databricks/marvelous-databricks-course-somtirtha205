@@ -8,7 +8,7 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -29,7 +29,8 @@ SELECT
 FROM mlops_dev.hotel_reservation.model_monitoring_profile_metrics"""
 
 
-query = w.queries.create(query=sql.CreateQueryRequestQuery(
+query = w.queries.create(
+    query=sql.CreateQueryRequestQuery(
         display_name=f"hotel-reservation-alert-query-{time.time_ns()}",
         warehouse_id=srcs[0].warehouse_id,
         description="Alert on hotel reservation model F1 Score",
@@ -37,7 +38,8 @@ query = w.queries.create(query=sql.CreateQueryRequestQuery(
     )
 )
 
-alert = w.alerts.create(alert=sql.CreateAlertRequestAlert(
+alert = w.alerts.create(
+    alert=sql.CreateAlertRequestAlert(
         condition=sql.AlertCondition(
             operand=sql.AlertConditionOperand(column=sql.AlertOperandColumn(name="percentage_lower_than_80")),
             op=sql.AlertOperator.GREATER_THAN,

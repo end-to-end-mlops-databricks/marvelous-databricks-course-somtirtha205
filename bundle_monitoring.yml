@@ -1,0 +1,27 @@
+resources:
+  jobs:
+    hotel-reservation-monitor-update:
+      name: hotel-reservation-monitor-update-workflow
+      tags:
+        project_name: "hotel-reservation"
+      job_clusters:
+        - job_cluster_key: "hotel-reservation-cluster"
+          new_cluster:
+            spark_version: "15.4.x-scala2.12"
+            data_security_mode: "SINGLE_USER"
+            node_type_id: "Standard_DS3_v2"
+            driver_node_type_id: "Standard_DS3_v2"
+            autoscale:
+              min_workers: 1
+              max_workers: 1
+
+      tasks:
+        - task_key: "refresh_monitor_table"
+          job_cluster_key: "hotel-reservation-cluster"
+          spark_python_task:
+            python_file: "week6/refresh_monitor.py"
+            parameters:
+              - "--root_path"
+              - ${var.root_path}
+          libraries:
+           - whl: ./dist/*.whl
